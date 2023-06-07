@@ -1,10 +1,10 @@
 FROM golang:latest
 
+RUN go build -o main ./main.go
+
 RUN mkdir /app
 
 WORKDIR /app
-
-RUN go build -o main ./main.go
 
 ADD ./main /app
 
