@@ -1,12 +1,12 @@
 FROM golang:latest
 
-RUN go build -o main ./main.go
-
 RUN mkdir /app
 
 WORKDIR /app
 
-ADD ./main /app
+ADD . /app
+
+RUN go build -o main ./main.go
 
 EXPOSE 8888
 
