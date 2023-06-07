@@ -11,7 +11,7 @@ docker rmi -f ${image_name}
 #执行Dockerfile文件，生成镜像
 docker build . -t ${image_name}
 #生成容器并启动
-docker run -p 8888:8888 -d --name=${container_name}
+docker run -p 8888:8888 -d --name=${container_name} ${image_name}
 #查看容器是否启动成功
 docker ps
 
