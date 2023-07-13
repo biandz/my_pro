@@ -23,13 +23,27 @@ func init() {
 	m["9"] = []string{"w", "x", "y", "z"}
 }
 func main() {
-	s := "23"
+	s := "2"
 	fmt.Println(letterCombinations(s))
 }
 func letterCombinations(digits string) []string {
+	var rst = []string{}
 	for _, v := range digits {
-		fmt.Println(m[string(v)])
+		rst = combination(m[string(v)], rst)
 	}
+	return rst
+}
 
-	return []string{}
+func combination(s1, s2 []string) []string {
+	var rst = make([]string, 0, len(s1)*len(s2))
+	for _, s := range s1 {
+		if len(s2) > 0 {
+			for _, s3 := range s2 {
+				rst = append(rst, s3+s)
+			}
+		} else {
+			rst = append(rst, s)
+		}
+	}
+	return rst
 }
