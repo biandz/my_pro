@@ -1,16 +1,20 @@
 package test
 
 import (
+	"container/heap"
 	"context"
 	"errors"
 	"fmt"
 	"math/rand"
 	"net"
+	"os/exec"
 	"runtime"
 	"strconv"
+	"strings"
 	"sync"
 	"testing"
 	"time"
+	"unsafe"
 )
 
 func Test_01(t *testing.T) {
@@ -322,4 +326,127 @@ func Test_16(t *testing.T) {
 func test16() {
 	fmt.Println("111")
 	return
+}
+
+var sli []int
+
+func Test_17(t *testing.T) {
+	for i := 0; i < 10; i++ {
+		wg.Add(1)
+		go appendTo()
+	}
+	wg.Wait()
+	fmt.Println(sli, len(sli))
+	fmt.Println("执行完毕！！")
+}
+
+func appendTo() {
+	l.Lock()
+	defer l.Unlock()
+	sli = append(sli, 1)
+	fmt.Printf("%p", sli)
+	fmt.Println()
+	wg.Done()
+}
+
+//实现最大堆
+func Test_18(t *testing.T) {
+	var q = &Queue{}
+	var sli = []int{1, 8, 1, 85, 1, 3, 7, 1, 6}
+	for i, v := range sli {
+		var p = Person{
+			Name: fmt.Sprintf("name%d", i),
+			Age:  v,
+		}
+		heap.Push(q, p)
+	}
+	for i := 0; i < len(sli); i++ {
+		fmt.Println(heap.Pop(q).(Person))
+	}
+}
+
+type Person struct {
+	Name string
+	Age  int
+}
+
+type Queue []Person
+
+func (q Queue) Len() int {
+	return len(q)
+}
+
+func (q Queue) Less(i, j int) bool {
+	return q[i].Age > q[j].Age
+}
+
+func (q Queue) Swap(i, j int) {
+	q[i], q[j] = q[j], q[i]
+}
+
+func (q *Queue) Push(x any) {
+	*q = append(*q, x.(Person))
+}
+
+func (q *Queue) Pop() any {
+	old, n := *q, len(*q)
+	x := old[n-1]
+	*q = old[0 : n-1]
+	return x
+}
+
+func Test_19(t *testing.T) {
+	var a int8
+	var b int16
+	var c int32
+	var d int64
+	var e uint8
+	var f uint16
+	var g uint32
+	var h uint64
+	var i bool
+	var j string
+
+	fmt.Println("字节数int8:", unsafe.Sizeof(a))
+	fmt.Println("字节数int16:", unsafe.Sizeof(b))
+	fmt.Println("字节数int32:", unsafe.Sizeof(c))
+	fmt.Println("字节数int64:", unsafe.Sizeof(d))
+	fmt.Println("字节数uint8:", unsafe.Sizeof(e))
+	fmt.Println("字节数uint16:", unsafe.Sizeof(f))
+	fmt.Println("字节数uint32:", unsafe.Sizeof(g))
+	fmt.Println("字节数uint64:", unsafe.Sizeof(h))
+	fmt.Println("字节数bool:", unsafe.Sizeof(i))
+	fmt.Println("字节数string:", unsafe.Sizeof(j))
+}
+
+func Test_20(t *testing.T) {
+	deviceID, err := getWindowsDeviceID()
+	if err != nil {
+		fmt.Println("Error:", err)
+		return
+	}
+
+	fmt.Println("Device ID:", deviceID)
+}
+func getWindowsDeviceID() (string, error) {
+	cmd := exec.Command("wmic", "csproduct", "get", "uuid")
+	output, err := cmd.Output()
+	if err != nil {
+		return "", err
+	}
+
+	deviceID := strings.TrimSpace(string(output))
+	return deviceID, nil
+}
+
+func Test_21(t *testing.T) {
+	interInfos, err := net.Interfaces()
+	if err != nil {
+		return
+	}
+
+	for _, info := range interInfos {
+		fmt.Println(info.Name)
+		fmt.Println(info.HardwareAddr.String())
+	}
 }

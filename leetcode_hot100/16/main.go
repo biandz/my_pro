@@ -1,10 +1,13 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 func main() { //1 2 3 5 4
-	s := ")()())"
-	fmt.Println(longestValidParentheses(s))
+	s := ")))(    ()(())  (()"
+	fmt.Println(longestValidParentheses1(s))
 }
 func longestValidParentheses(s string) int {
 	var rst int
@@ -32,4 +35,45 @@ func judge(s string) bool {
 		}
 	}
 	return len(heap) == 0
+}
+
+func longestValidParentheses1(s string) int {
+	res := 0
+	ln := 0
+	temp := 0
+	s = strings.TrimRight(s, "(")
+	s = strings.TrimLeft(s, ")")
+	n := 0
+	carry := ""
+	for i := 0; i < len(s); i++ {
+		if s[i] == '(' {
+			ln++
+			if carry == "(" {
+				if n > 0 {
+					temp = 0
+					n = 0
+				}
+				n++
+			}
+			carry = "("
+		}
+		if s[i] == ')' {
+			carry = ")"
+			if ln != 0 {
+				ln--
+				temp += 2
+			} else {
+				temp = 0
+			}
+			res = max(temp, res)
+		}
+	}
+	return res
+}
+
+func max(a, b int) int {
+	if a > b {
+		return a
+	}
+	return b
 }
