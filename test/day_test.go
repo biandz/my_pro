@@ -9,6 +9,7 @@ import (
 	"net"
 	"os/exec"
 	"runtime"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -429,7 +430,7 @@ func Test_20(t *testing.T) {
 	fmt.Println("Device ID:", deviceID)
 }
 func getWindowsDeviceID() (string, error) {
-	cmd := exec.Command("wmic", "csproduct", "get", "uuid")
+	cmd := exec.Command("wmic", "cpu", "get", "ProcessorID")
 	output, err := cmd.Output()
 	if err != nil {
 		return "", err
@@ -449,4 +450,420 @@ func Test_21(t *testing.T) {
 		fmt.Println(info.Name)
 		fmt.Println(info.HardwareAddr.String())
 	}
+}
+
+func Test_22(t *testing.T) {
+	nums := []int{2, 3, 6, 7}
+	fmt.Println(zuhe22(nums))
+}
+
+func zuhe22(nums []int) [][]int {
+	var rst [][]int
+	var tempSli []int
+	var dfs func(nums, tempSli []int, start int)
+	dfs = func(nums, tempSli []int, start int) {
+		if len(tempSli) > 0 {
+			rst = append(rst, tempSli)
+		}
+		for i := start; i < len(nums); i++ {
+			tempSli = append(tempSli, nums[i])
+			//进入下一层
+			dfs(nums, tempSli, i+1)
+			tempSli = removeLast(tempSli)
+		}
+	}
+	dfs(nums, tempSli, 0)
+	return rst
+}
+
+func removeLast(nums []int) []int {
+	s := []int{}
+	for k, v := range nums {
+		if k != len(nums)-1 {
+			s = append(s, v)
+		}
+	}
+	return s
+}
+
+//无重复元素，可复选
+func Test_23(t *testing.T) {
+	candidates := []int{2, 3, 5}
+	target := 8
+	fmt.Println(combinationSum(candidates, target))
+}
+
+func combinationSum(candidates []int, target int) [][]int {
+	var rst [][]int
+	var tempSum int
+	var tempSli []int
+	var start int
+	var dfs func(candidates, tempSli []int, tempSum, start int)
+	dfs = func(candidates, tempSli []int, tempSum, start int) {
+		if tempSum == target {
+			rst = append(rst, tempSli)
+			return
+		}
+		if tempSum > target {
+			return
+		}
+
+		for i := start; i < len(candidates); i++ {
+			//选择
+			tempSli = append(tempSli, candidates[i])
+			tempSum += candidates[i]
+			//进入
+			dfs(candidates, tempSli, tempSum, i)
+			//撤销
+			tempSum -= candidates[i]
+			tempSli = removeLast(tempSli)
+		}
+	}
+	dfs(candidates, tempSli, tempSum, start)
+	return rst
+}
+
+//可重复元素，不能重复选的剪枝
+func Test_24(t *testing.T) {
+	candidates := []int{10, 1, 2, 7, 6, 1, 5}
+	target := 8
+	fmt.Println(combinationSum2(candidates, target))
+}
+
+func combinationSum2(candidates []int, target int) [][]int {
+	var rst [][]int
+	var tempSum int
+	var tempSli []int
+	var start int
+	//减枝所需
+	var isUsed = make([]bool, len(candidates))
+	var dfs func(candidates, tempSli []int, tempSum, start int)
+	dfs = func(candidates, tempSli []int, tempSum, start int) {
+		if tempSum == target {
+			rst = append(rst, tempSli)
+			return
+		}
+		if tempSum > target {
+			return
+		}
+
+		for i := start; i < len(candidates); i++ {
+			//减枝所需
+			if i > 0 && candidates[i] == candidates[i-1] && !isUsed[i-1] {
+				continue
+			}
+			//选择
+			tempSli = append(tempSli, candidates[i])
+			tempSum += candidates[i]
+			isUsed[i] = true
+			//进入
+			dfs(candidates, tempSli, tempSum, i+1)
+			//撤销
+			isUsed[i] = false
+			tempSum -= candidates[i]
+			tempSli = removeLast(tempSli)
+		}
+	}
+	//减枝所需
+	sort.Ints(candidates)
+	dfs(candidates, tempSli, tempSum, start)
+	return rst
+}
+
+func Test_25(t *testing.T) {
+	nums := []int{3, 3, 0, 3}
+	fmt.Println(permuteUnique(nums))
+}
+
+func permuteUnique(nums []int) [][]int {
+	var rst [][]int
+	var isUsed = make([]bool, len(nums))
+	var dfs func(tempSli []int)
+	var tempSli []int
+	dfs = func(tempSli []int) {
+		if len(tempSli) == len(nums) {
+			rst = append(rst, tempSli)
+		}
+
+		for i := 0; i < len(nums); i++ {
+			//重复元素，不可复选的减枝
+			if i > 0 && nums[i] == nums[i-1] && !isUsed[i-1] {
+				continue
+			}
+			if isUsed[i] {
+				continue
+			}
+			//选择
+			tempSli = append(tempSli, nums[i])
+			isUsed[i] = true
+			//进入
+			dfs(tempSli)
+			//撤销
+			tempSli = removeLast(tempSli)
+			isUsed[i] = false
+		}
+	}
+	sort.Ints(nums)
+	dfs(tempSli)
+	return rst
+}
+
+func Test_26(t *testing.T) {
+	n, k := 1, 1
+	fmt.Println(combine(n, k))
+}
+
+func combine(n int, k int) [][]int {
+	nums := genSli(n)
+	var rst [][]int
+	var tempSli []int
+	var start int
+	var dfs func(tempSli []int, start int)
+	dfs = func(tempSli []int, start int) {
+		if len(tempSli) == k {
+			rst = append(rst, tempSli)
+			return
+		}
+		for i := start; i < n; i++ {
+			//选择
+			tempSli = append(tempSli, nums[i])
+			//进入
+			dfs(tempSli, i+1)
+			//撤销
+			tempSli = removeLast(tempSli)
+		}
+	}
+	dfs(tempSli, start)
+	return rst
+}
+
+func genSli(n int) []int {
+	sli := make([]int, 0, n)
+	for i := 1; i <= n; i++ {
+		sli = append(sli, i)
+	}
+	return sli
+}
+
+func Test_27(t *testing.T) {
+	nums := []int{0}
+	fmt.Println(subsets(nums))
+}
+
+func subsets(nums []int) [][]int {
+	var rst [][]int
+	var start int
+	var tempSli []int
+	var dfs func(tempSli []int, start int)
+	dfs = func(tempSli []int, start int) {
+		rst = append(rst, tempSli)
+		for i := start; i < len(nums); i++ {
+			//选择
+			tempSli = append(tempSli, nums[i])
+			//进入
+			dfs(tempSli, i+1)
+			//撤销
+			tempSli = removeLast(tempSli)
+		}
+	}
+	dfs(tempSli, start)
+	return rst
+}
+
+func Test_28(t *testing.T) {
+	board := [][]byte{{'A', 'B', 'C', 'E'}, {'S', 'F', 'C', 'S'}, {'A', 'D', 'E', 'E'}}
+	word := "SEE"
+	fmt.Println(exist(board, word))
+
+}
+
+func exist(board [][]byte, word string) bool {
+	m, n := len(board), len(board[0])
+	var isUsed = make([][]bool, m)
+	for i := 0; i < m; i++ {
+		isUsed[i] = make([]bool, n)
+	}
+	var dfs func(x, y, index int) bool
+	dfs = func(x, y, index int) bool {
+		if board[x][y] != word[index] {
+			return false
+		}
+		if index == len(word)-1 {
+			return true
+		}
+		//选择
+		isUsed[x][y] = true
+		//进入
+		//下
+		if 0 <= x+1 && x+1 < m && !isUsed[x+1][y] {
+			if dfs(x+1, y, index+1) {
+				return true
+			}
+		}
+		//上
+		if 0 <= x-1 && x-1 < m && !isUsed[x-1][y] {
+			if dfs(x-1, y, index+1) {
+				return true
+			}
+		}
+		//左
+		if 0 <= y-1 && y-1 < n && !isUsed[x][y-1] {
+			if dfs(x, y-1, index+1) {
+				return true
+			}
+		}
+		//右
+		if 0 <= y+1 && y+1 < n && !isUsed[x][y+1] {
+			if dfs(x, y+1, index+1) {
+				return true
+			}
+		}
+		//撤销
+		isUsed[x][y] = false
+		return false
+	}
+
+	for x, bytes := range board {
+		for y, _ := range bytes {
+			if dfs(x, y, 0) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func Test_29(t *testing.T) {
+	nums := []int{0}
+	fmt.Println(subsetsWithDup(nums))
+}
+
+func subsetsWithDup(nums []int) [][]int {
+	var rst [][]int
+	var tempSli []int
+	var isUsed = make([]bool, len(nums))
+	var start int
+	var dfs func(tempSli []int, start int)
+	dfs = func(tempSli []int, start int) {
+		rst = append(rst, tempSli)
+		for i := start; i < len(nums); i++ {
+			if i > 0 && nums[i] == nums[i-1] && !isUsed[i-1] {
+				continue
+			}
+			if isUsed[i] {
+				continue
+			}
+			//选择
+			isUsed[i] = true
+			tempSli = append(tempSli, nums[i])
+			//进入
+			dfs(tempSli, i+1)
+			//撤销
+			isUsed[i] = false
+			tempSli = removeLast(tempSli)
+		}
+	}
+	sort.Ints(nums)
+	dfs(tempSli, start)
+	return rst
+}
+
+func Test_30(t *testing.T) {
+	beginWord := "hit"
+	endWord := "cog"
+	wordList := []string{"hot", "dot", "dog", "lot", "log", "cog"}
+	fmt.Println(findLadders(beginWord, endWord, wordList))
+}
+
+func findLadders(beginWord string, endWord string, wordList []string) [][]string {
+	var rst [][]string
+
+	var queue = []string{beginWord}
+	for len(queue) != 0 {
+		for i := 0; i < len(queue); i++ {
+			//取出第一个并更新queue
+			queue := queue[1:]
+			first := queue[0]
+			queue = append(queue, rex(first, wordList)...)
+		}
+	}
+
+	return rst
+}
+
+//返回与自身只有一位字符不同的字符串
+func rex(str string, strs []string) []string {
+	var rst []string
+	for i := 0; i < len(str); i++ {
+		//修改第i个字符从‘a’到‘z’
+		for j := 0; j < 26; j++ {
+			newStr := genNewStr(i, m[j], str)
+			if inArray(newStr, strs) {
+				rst = append(rst, newStr)
+			}
+		}
+	}
+	return rst
+}
+
+func genNewStr(index int, char byte, str string) string {
+	b := []byte(str)
+	b[index] = char
+	return string(b)
+}
+
+var m = map[int]byte{
+	0: 'a', 1: 'b', 2: 'c', 3: 'd', 4: 'e',
+	5: 'f', 6: 'g', 7: 'h', 8: 'i', 9: 'j',
+	10: 'k', 11: 'l', 12: 'm', 13: 'n', 14: 'o',
+	15: 'p', 16: 'q', 17: 'r', 18: 's', 19: 't',
+	20: 'u', 21: 'v', 22: 'w', 23: 'x', 24: 'y', 25: 'z',
+}
+
+func inArray(str string, strs []string) bool {
+	for _, s := range strs {
+		if s == str {
+			return true
+		}
+	}
+	return false
+}
+
+func Test_31(t *testing.T) {
+	sli := []int{1}
+	fmt.Println(sli[0])
+	fmt.Println(sli[1:])
+}
+
+func Test_32(t *testing.T) {
+	var ch = make(chan string, 100)
+
+	go func() {
+		for {
+			ch <- "协程1"
+			time.Sleep(1 * time.Second)
+		}
+	}()
+
+	go func() {
+		for {
+			ch <- "协程2"
+			time.Sleep(1 * time.Second)
+		}
+	}()
+
+	go func() {
+		for {
+			ch <- "协程3"
+			time.Sleep(1 * time.Second)
+		}
+	}()
+
+	for {
+		select {
+		case a := <-ch:
+			fmt.Println(a)
+		}
+	}
+
 }
