@@ -13,6 +13,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 	"unsafe"
@@ -866,4 +867,61 @@ func Test_32(t *testing.T) {
 		}
 	}
 
+}
+
+type Man struct {
+	Name string
+	Age  int
+}
+
+func (m *Man) setName(name string) {
+	m.Name = name
+}
+
+func (m *Man) getName() string {
+	return m.Name
+}
+
+func (m *Man) setAge(age int) {
+	m.Age = age
+}
+
+func (m *Man) getAge() int {
+	return m.Age
+}
+
+func newMan(name string, age int) *Man {
+	return &Man{name, age}
+}
+
+func Test_33(t *testing.T) {
+	m := newMan("bdz", 18)
+	fmt.Println(m.getAge())
+	m.setAge(19)
+	fmt.Println(m.getAge())
+}
+
+func Test_34(t *testing.T) {
+	s1 := []int{1, 2, 3, 4}
+	s2 := s1
+	fmt.Println(s2)
+	s2[3] = 777
+	fmt.Println(s1)
+	fmt.Println(s2)
+}
+
+var rst uint32 = 0
+
+func Test_35(t *testing.T) {
+	for i := 0; i < 100; i++ {
+		wg.Add(1)
+		go func() {
+			fmt.Println("打印前结果：", rst)
+			atomic.AddUint32(&rst, 2)
+			fmt.Println("打印后结果：", rst)
+			wg.Done()
+		}()
+	}
+	wg.Wait()
+	fmt.Println(rst)
 }
