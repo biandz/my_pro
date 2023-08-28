@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	http.ListenAndServe(":8080", middleware2Handler(middleware1Handler(http.HandlerFunc(IndexController))))
+	http.ListenAndServe(":8081", middleware2Handler(middleware1Handler(http.HandlerFunc(IndexController))))
 }
 
 func IndexController(writer http.ResponseWriter, request *http.Request) {
