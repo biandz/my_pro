@@ -925,3 +925,14 @@ func Test_35(t *testing.T) {
 	wg.Wait()
 	fmt.Println(rst)
 }
+
+func Test_36(t *testing.T) {
+	// 创建两个时间
+	startTime := time.Date(2023, time.August, 18, 10, 0, 0, 0, time.UTC)
+	endTime := time.Date(2023, time.August, 18, 15, 30, 0, 0, time.UTC)
+
+	// 计算时间间隔
+	duration := endTime.Sub(startTime)
+
+	fmt.Println("Duration:", duration)
+}

@@ -1,0 +1,36 @@
+syntax = "proto3";
+//package product;
+option go_package = "./pb";
+message User {
+  int32 id = 1;
+  string name = 2;
+  uint32 age = 3;
+  enum Flag {
+    NORMAL = 0;
+    VIP = 1;
+    SVIP = 2;
+  }
+  repeated int32 friends_ids = 5;
+  reserved 6, 7, 8;
+  message Command {
+    int32 id = 1;
+    oneof cmd_value {
+      string name = 2;
+      int32 age = 3;
+    }
+  }
+  Command cmd = 9;
+  map<int32, string> tags = 10;
+}
+
+service UserService {
+  rpc GetUserInfo(UserRequest) returns (UserResponse) {}
+}
+
+message UserRequest {
+  uint32 id = 1;
+}
+
+message UserResponse {
+  User user = 1;
+}
