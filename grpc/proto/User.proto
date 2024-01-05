@@ -21,6 +21,7 @@ message User {
   }
   Command cmd = 9;
   map<int32, string> tags = 10;
+  Flag flag = 11;
 }
 
 service UserService {

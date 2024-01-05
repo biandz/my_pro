@@ -1,0 +1,2 @@
+protoc --go-grpc_out ../ .\User.proto
+protoc --go_out ../ .\User.proto

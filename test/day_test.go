@@ -3,11 +3,13 @@ package test
 import (
 	"container/heap"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"math/rand"
 	"net"
 	"os/exec"
+	"reflect"
 	"runtime"
 	"sort"
 	"strconv"
@@ -927,12 +929,398 @@ func Test_35(t *testing.T) {
 }
 
 func Test_36(t *testing.T) {
-	// 创建两个时间
-	startTime := time.Date(2023, time.August, 18, 10, 0, 0, 0, time.UTC)
-	endTime := time.Date(2023, time.August, 18, 15, 30, 0, 0, time.UTC)
+	c := sync.NewCond(&sync.Mutex{})
+	queue := make([]interface{}, 0, 10)
+	removeFromQueue := func(delay time.Duration) {
+		time.Sleep(delay)
+		c.L.Lock()
+		queue = queue[1:]
+		fmt.Println("Removed from queue")
+		c.L.Unlock()
+		c.Signal()
+	}
+	for i := 0; i < 10; i++ {
+		c.L.Lock()
+		for len(queue) == 2 {
+			c.Wait()
+		}
+		fmt.Println("Adding to queue")
+		queue = append(queue, struct{}{})
+		go removeFromQueue(1 * time.Second)
+		c.L.Unlock()
+	}
 
-	// 计算时间间隔
-	duration := endTime.Sub(startTime)
+	for {
 
-	fmt.Println("Duration:", duration)
+	}
+}
+
+func Test_37(t *testing.T) {
+	fmt.Println(123)
+}
+
+func Test_38(t *testing.T) {
+	wg := sync.WaitGroup{}
+	c := make(chan struct{})
+	for i := 0; i < 10; i++ {
+		wg.Add(1)
+		go func(num int, close <-chan struct{}) {
+			defer wg.Done()
+			<-close
+			fmt.Println(num)
+		}(i, c)
+	}
+
+	if WaitTimeout(&wg, time.Second*5) {
+		close(c)
+		fmt.Println("timeout exit")
+	}
+	time.Sleep(time.Second * 10)
+}
+
+func WaitTimeout(wg *sync.WaitGroup, timeout time.Duration) bool {
+	ticker := time.NewTicker(timeout)
+
+	ch := make(chan struct{})
+	go func() {
+		wg.Wait()
+		ch <- struct{}{}
+	}()
+	select {
+	case <-ticker.C:
+		return true
+	case <-ch:
+		return false
+	}
+	// 要求手写代码
+	// 要求sync.WaitGroup支持timeout功能
+	// 如果timeout到了超时时间返回true
+	// 如果WaitGroup自然结束返回false
+}
+
+const (
+	a = iota
+	b = iota
+)
+const (
+	name = "menglu"
+	c    = iota
+	d    = iota
+)
+
+func Test_39(t *testing.T) {
+	fmt.Println(a)
+	fmt.Println(b)
+	fmt.Println(c)
+	fmt.Println(d)
+}
+
+type Girl struct {
+	Name       string `json:"name"`
+	DressColor string `json:"dress_color"`
+}
+
+func (g Girl) SetColor(color string) {
+	g.DressColor = color
+}
+func (g Girl) JSON() string {
+	data, _ := json.Marshal(&g)
+	return string(data)
+}
+
+type Student struct {
+	Name string
+}
+
+func Test_40(t *testing.T) {
+	fmt.Println([...]string{"1"} == [...]string{"1"})
+	//a := []string{"1"}
+	//b := []string{"1"}
+	fmt.Println(reflect.DeepEqual(Stduent{Age: 1}, Stduent{Age: 1}))
+	fmt.Println(Stduent{Age: 1} == Stduent{Age: 1})
+}
+
+type Stduent struct {
+	Age int
+}
+
+func Test_41(t *testing.T) {
+	kv := map[string]Stduent{"menglu": {Age: 21}}
+	//kv["menglu"].Age = 22
+	s := []Stduent{{Age: 21}}
+	s[0].Age = 22
+	fmt.Println(kv, s)
+}
+
+func Test_42(t *testing.T) {
+	a := "3"
+	var b interface{} = a
+	c := b.(int)
+	fmt.Println(c)
+}
+
+func Test_43(t *testing.T) {
+	s := []int{1, 2, 3, 4, 5}
+	//fmt.Println(Add(s, 5, 6))
+	fmt.Println(Delete(s, -1))
+}
+
+func Add(s []int, index, ele int) []int {
+	if index >= len(s) {
+		s = append(s, ele)
+		return s
+	}
+
+	font := s[:index]
+	back := s[index:]
+	s1 := make([]int, 0, len(s)+1)
+	s1 = append(s1, font...)
+	s1 = append(s1, ele)
+	s1 = append(s1, back...)
+	return s1
+}
+
+func Delete(s []int, index int) []int {
+	if index >= len(s) || index < 0 {
+		return s
+	}
+	f := s[:index]
+	b := s[index+1:]
+	s1 := make([]int, 0, len(s)-1)
+	s1 = append(s1, f...)
+	s1 = append(s1, b...)
+	return s1
+}
+
+func Test_44(t *testing.T) {
+	defer execTime(time.Now())
+	time.Sleep(5 * time.Second)
+}
+
+func execTime(t time.Time) {
+	fmt.Println("execTime:", time.Since(t).String())
+}
+
+//这个写法可以完成在执行一个业务时，完成前置处理和后置处理
+var test45 = 0
+
+func Test_45(t *testing.T) {
+	defer InitAndCloseSource()()
+	fmt.Println("test45 value:", test45)
+}
+func InitAndCloseSource() func() {
+	//获取资源
+	test45 = 18
+	//释放资源
+	return func() {
+		test45 = 0
+	}
+}
+
+type Person45 struct {
+	Age  int
+	Name string
+}
+
+func (p *Person45) setName(name string) *Person45 {
+	p.Name = name
+	return p
+}
+
+func (p *Person45) setAge(age int) *Person45 {
+	p.Age = age
+	return p
+}
+
+func (p *Person45) Print() {
+	fmt.Println(fmt.Sprintf("%+v", p))
+}
+
+func Test_46(t *testing.T) {
+	p := new(Person45)
+	p.setName("bdz").setAge(18).Print()
+}
+
+func Test_47(t *testing.T) {
+	parse, err := time.Parse("2006-01-02 15:04:05", "2014-06-15 08:37:18")
+	if err != nil {
+		return
+	}
+
+	parse.Unix()
+}
+
+func Test_48(t *testing.T) {
+	ch := make(chan interface{}, 10)
+	go func() {
+		for {
+			select {
+			case <-ch:
+				fmt.Println("case1")
+			case <-ch:
+				fmt.Println("case2")
+			}
+		}
+	}()
+
+	for i := 0; i < 10; i++ {
+		ch <- i
+		time.Sleep(1 * time.Second)
+	}
+}
+
+var lock sync.Mutex
+
+func Test_49(t *testing.T) {
+	for i := 0; i < 10; i++ {
+		go dealSomeThing(i)
+	}
+	time.Sleep(2 * time.Second)
+}
+
+func dealSomeThing(i int) {
+	defer back()()
+	fmt.Println("do sth:", i)
+}
+
+func back() func() {
+	lock.Lock()
+	return func() {
+		lock.Unlock()
+	}
+}
+
+//chan 三种panic 1、关闭nil的chan 2、关闭已关闭的chan 3、向关闭的chan写数据
+func Test_50(t *testing.T) {
+	//1、关闭nil的chan
+	//var ch chan int
+	//close(ch)
+
+	//2、关闭已关闭的chan
+	//ch := make(chan int, 10)
+	//close(ch)
+	//close(ch)
+
+	//3、向关闭的chan写数据
+	//ch := make(chan int, 10)
+	//close(ch)
+	//ch <- 1
+}
+
+//循环读取chan数据，当写输入端退出时，读取端会永久阻塞导致死锁
+func Test_51(t *testing.T) {
+	ch := make(chan int, 10)
+	go func() {
+		for i := 0; i < 10; i++ {
+			ch <- i
+			time.Sleep(1 * time.Second)
+		}
+	}()
+
+	for i := range ch {
+		fmt.Println("i:", i)
+	}
+}
+
+func Test_52(t *testing.T) {
+	var sli []string
+	sli = append(sli, "1", "2", "3", "4", "5", "6", "7", "7", "1", "2", "3", "4", "5", "6", "7", "7")
+	fmt.Println(cap(sli))
+	newSli := append(sli, "4")
+	fmt.Println(&sli[0] == &newSli[0])
+}
+
+func Test_53(t *testing.T) {
+	orderLen := 5
+	order := make([]uint16, 2*orderLen)
+
+	pollorder := order[:orderLen:orderLen]
+	lockorder := order[orderLen:][:orderLen:orderLen]
+
+	fmt.Println(len(pollorder)) //5
+	fmt.Println(cap(pollorder)) //5
+	fmt.Println(len(lockorder)) //5
+	fmt.Println(cap(lockorder)) //5
+}
+
+func Test_54(t *testing.T) {
+	s1 := make([]int, 5)
+	s2 := []int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
+	i := copy(s1, s2)
+
+	fmt.Println(s1)
+	fmt.Println(s2)
+	fmt.Println(i)
+}
+
+func Test_56(t *testing.T) {
+	sli := []int{1, 2, 3, 5}
+	for _, i := range sli {
+		defer func() {
+			fmt.Println(i)
+		}()
+	}
+}
+
+func Test_57(t *testing.T) {
+	cache := NewMyCache()
+	cache.Set("name", "bdz", -1)
+	cache.Set("age", 18, 5)
+
+	for {
+		r, ok := cache.Get("name")
+		if ok {
+			fmt.Println(r)
+		}
+
+		r, ok = cache.Get("age")
+		if ok {
+			fmt.Println(r)
+		}
+
+		time.Sleep(1 * time.Second)
+	}
+
+}
+
+type MyCache struct {
+	Data map[string]interface{}
+	lock *sync.Mutex
+}
+
+func NewMyCache() *MyCache {
+	return &MyCache{
+		Data: make(map[string]interface{}),
+		lock: new(sync.Mutex),
+	}
+}
+
+func (mc *MyCache) Set(k string, v interface{}, t time.Duration) {
+	defer mc.lockAndUnLock()()
+	mc.Data[k] = v
+	//如果过期时间大于0，启动过期检测
+	if t > 0 {
+		go mc.checkExp(k, t)
+	}
+}
+
+func (mc *MyCache) Get(k string) (interface{}, bool) {
+	defer mc.lockAndUnLock()()
+	rst, ok := mc.Data[k]
+	return rst, ok
+}
+
+func (mc *MyCache) checkExp(key string, t time.Duration) {
+	//到达过期时间，删除对应下表key
+	time.AfterFunc(t*time.Second, func() {
+		defer mc.lockAndUnLock()()
+		delete(mc.Data, key)
+	})
+}
+
+func (mc *MyCache) lockAndUnLock() func() {
+	mc.lock.Lock()
+	return func() {
+		mc.lock.Unlock()
+	}
 }

@@ -39,10 +39,8 @@ func main() {
 	version, err := c.ElasticsearchVersion(Url)
 	if err != nil {
 		log.Fatal("获取es版本失败：", err.Error())
-		return
-	} else {
-		fmt.Println("当前es版本：", version)
 	}
+	fmt.Println("当前es版本：", version)
 	client = c
 	//set(client)
 	get()
