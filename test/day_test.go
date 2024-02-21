@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"math/rand"
 	"net"
+	"net/http"
 	"os/exec"
 	"reflect"
 	"runtime"
@@ -1323,4 +1324,12 @@ func (mc *MyCache) lockAndUnLock() func() {
 	return func() {
 		mc.lock.Unlock()
 	}
+}
+
+func Test_99(t *testing.T) {
+	resp, err := http.Get("https://aqua-jealous-pig-842.mypinata.cloud/ipfs/QmTr3FDsrrnR4got4SMm68oYW3WxZw8smMBwLmttEnZgr1/1")
+	if err != nil {
+		return
+	}
+	fmt.Println(resp)
 }

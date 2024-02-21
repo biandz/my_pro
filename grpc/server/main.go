@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/reflection"
 	"log"
 	"my_grpc/pb"
@@ -47,7 +48,14 @@ func main() {
 
 	// 拦截器
 	options := grpc.UnaryInterceptor(LogUnaryInterceptorMiddleware())
-	s := grpc.NewServer(options)
+
+	//证书
+	c, err := credentials.NewServerTLSFromFile("../conf/custom.pem", "../conf/custom.key")
+	if err != nil {
+		log.Fatalf("start serve with tls failed: %v", err)
+	}
+	opts := []grpc.ServerOption{options, grpc.Creds(c)}
+	s := grpc.NewServer(opts...)
 
 	// 注册服务器实现
 	pb.RegisterUserServiceServer(s, &server{})
