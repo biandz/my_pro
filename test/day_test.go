@@ -6,9 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"math/rand"
 	"net"
-	"net/http"
 	"os/exec"
 	"reflect"
 	"runtime"
@@ -23,6 +21,7 @@ import (
 )
 
 func Test_01(t *testing.T) {
+
 	for i := 0; i < 10000; i++ {
 		fmt.Println(i)
 	}
@@ -55,7 +54,7 @@ func Test_02(t *testing.T) {
 	}
 }
 
-//发牌的索引
+// 发牌的索引
 func deal(num int) ([][]int, error) {
 	var rst = make([][]int, 0, num)
 	if num*2 > len(pk) {
@@ -90,13 +89,13 @@ func deal(num int) ([][]int, error) {
 	return rst, nil
 }
 
-//获取随机数
+// 获取随机数
 func getRand() int {
-	rand.Seed(time.Now().UnixNano())
-	return rand.Intn(len(pk))
+	//rand.Seed(time.Now().UnixNano())
+	return 0
 }
 
-//计算牌力值
+// 计算牌力值
 func compute(rst []int) int {
 	var score = 0
 	first := rst[0]
@@ -109,7 +108,7 @@ func compute(rst []int) int {
 	return score
 }
 
-//LRU算法实践
+// LRU算法实践
 func Test_03(t *testing.T) {
 	l := NewLRU()
 	for i := 0; i < 20; i++ {
@@ -354,7 +353,7 @@ func appendTo() {
 	wg.Done()
 }
 
-//实现最大堆
+// 实现最大堆
 func Test_18(t *testing.T) {
 	var q = &Queue{}
 	var sli = []int{1, 8, 1, 85, 1, 3, 7, 1, 6}
@@ -490,7 +489,7 @@ func removeLast(nums []int) []int {
 	return s
 }
 
-//无重复元素，可复选
+// 无重复元素，可复选
 func Test_23(t *testing.T) {
 	candidates := []int{2, 3, 5}
 	target := 8
@@ -527,7 +526,7 @@ func combinationSum(candidates []int, target int) [][]int {
 	return rst
 }
 
-//可重复元素，不能重复选的剪枝
+// 可重复元素，不能重复选的剪枝
 func Test_24(t *testing.T) {
 	candidates := []int{10, 1, 2, 7, 6, 1, 5}
 	target := 8
@@ -795,7 +794,7 @@ func findLadders(beginWord string, endWord string, wordList []string) [][]string
 	return rst
 }
 
-//返回与自身只有一位字符不同的字符串
+// 返回与自身只有一位字符不同的字符串
 func rex(str string, strs []string) []string {
 	var rst []string
 	for i := 0; i < len(str); i++ {
@@ -1102,7 +1101,7 @@ func execTime(t time.Time) {
 	fmt.Println("execTime:", time.Since(t).String())
 }
 
-//这个写法可以完成在执行一个业务时，完成前置处理和后置处理
+// 这个写法可以完成在执行一个业务时，完成前置处理和后置处理
 var test45 = 0
 
 func Test_45(t *testing.T) {
@@ -1191,7 +1190,7 @@ func back() func() {
 	}
 }
 
-//chan 三种panic 1、关闭nil的chan 2、关闭已关闭的chan 3、向关闭的chan写数据
+// chan 三种panic 1、关闭nil的chan 2、关闭已关闭的chan 3、向关闭的chan写数据
 func Test_50(t *testing.T) {
 	//1、关闭nil的chan
 	//var ch chan int
@@ -1208,7 +1207,7 @@ func Test_50(t *testing.T) {
 	//ch <- 1
 }
 
-//循环读取chan数据，当写输入端退出时，读取端会永久阻塞导致死锁
+// 循环读取chan数据，当写输入端退出时，读取端会永久阻塞导致死锁
 func Test_51(t *testing.T) {
 	ch := make(chan int, 10)
 	go func() {
@@ -1326,10 +1325,96 @@ func (mc *MyCache) lockAndUnLock() func() {
 	}
 }
 
+type Person1 struct {
+}
+
+var wg1 sync.WaitGroup
+
 func Test_99(t *testing.T) {
-	resp, err := http.Get("https://aqua-jealous-pig-842.mypinata.cloud/ipfs/QmTr3FDsrrnR4got4SMm68oYW3WxZw8smMBwLmttEnZgr1/1")
-	if err != nil {
-		return
+	for i := 0; i < 100; i++ {
+		wg1.Add(1)
+		go func() {
+			defer wg1.Done()
+			fmt.Println(fmt.Sprintf("%p", NewP1()))
+		}()
 	}
-	fmt.Println(resp)
+	wg1.Wait()
+}
+
+type P1 struct {
+}
+
+var o = new(P1)
+
+func NewP1() *P1 {
+	return o
+}
+
+// 轮询加权算法
+// 假设有三台服务器
+var s1, s2, s3 = "xxx", "yyy", "zzz"
+
+func Test_100(t *testing.T) {
+	//for i := 0; i < 10; i++ {
+	//	b2, _ := rand.Int(rand.Reader, big.NewInt(10))
+	//	fmt.Println(b2)
+	//}
+	sli := make([]*Obj, 0, 0)
+	sli = append(sli, &Obj{
+		Name:   "s1",
+		F:      nil,
+		Weight: 1,
+	}, &Obj{
+		Name:   "s2",
+		F:      nil,
+		Weight: 2,
+	}, &Obj{
+		Name:   "s3",
+		F:      nil,
+		Weight: 5,
+	})
+	pollingAndWeight(sli)
+}
+
+type Obj struct {
+	Name   string
+	F      func()
+	Weight int
+}
+
+func pollingAndWeight(s []*Obj) {
+	sli := make([]chan struct{}, len(s))
+	for i := 0; i < len(s); i++ {
+		sli[i] = make(chan struct{}, 1)
+	}
+
+	for i := 0; i < len(s); i++ {
+		go func(i int) {
+			for {
+				<-sli[i]
+				for j := 0; j < s[i].Weight; j++ {
+					fmt.Println(fmt.Sprintf("%s exec", s[i].Name))
+					time.Sleep(1 * time.Second)
+				}
+
+				if i == len(s)-1 {
+					sli[0] <- struct{}{}
+				} else {
+					sli[i+1] <- struct{}{}
+				}
+			}
+		}(i)
+	}
+	sli[0] <- struct{}{}
+	for {
+	}
+}
+
+func Test_101(t *testing.T) {
+	t1 := time.Now().Unix()
+	time.Sleep(1 * time.Second)
+	t2 := time.Now().Unix()
+
+	fmt.Println(t2 - t1)
+
 }
